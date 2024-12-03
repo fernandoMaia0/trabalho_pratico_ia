@@ -1,254 +1,120 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Assistente de Notebooks</title>
-  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+  <title>Chat IA</title>
   <style>
-    /* Estilo CSS */
-    body {
-      background-color: #e5e5e5;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      margin: 0;
-    }
-
-    .container {
-      width: 100%;
-      max-width: 600px;
-    }
-
-    .chatbox {
-      background-color: #fff;
-      border-radius: 20px;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      height: 70vh;
-    }
-
-    .chat-content {
-      flex: 1;
-      padding: 20px;
-      overflow-y: auto;
-      max-height: 500px;
-    }
-
-    .chat-input {
-      display: flex;
-      padding: 10px;
-      background-color: #fff;
-      border-top: 1px solid #ddd;
-    }
-
-    .chat-input input {
-      flex: 1;
-      border: none;
-      padding: 10px;
-      border-radius: 20px;
-      margin-right: 10px;
-      font-size: 1rem;
-    }
-
-    .chat-content .message {
-      display: flex;
-      align-items: center;
-      padding: 10px;
-      margin-bottom: 15px;
-      border-radius: 20px;
-      position: relative;
-    }
-
-    .chat-content .bot-message {
-      background-color: #f0f0f5;
-      flex-direction: row;
-    }
-
-    .chat-content .user-message {
-      background-color: #007aff;
-      color: white;
-      align-self: flex-end;
-      flex-direction: row-reverse;
-    }
-
-    .chat-content .message i {
-      margin-right: 15px;
-      font-size: 1.5em;
-    }
-
-    .chat-content .user-message i {
-      margin-left: 15px;
-    }
-
-    .chat-content .bot-message::after,
-    .chat-content .user-message::after {
-      content: '';
-      position: absolute;
-      bottom: -10px;
-      border-width: 10px;
-      border-style: solid;
-      border-color: transparent;
-    }
-
-    .chat-content .bot-message::after {
-      left: 10px;
-      border-color: #f0f0f5 transparent transparent transparent;
-    }
-
-    .chat-content .user-message::after {
-      right: 10px;
-      border-color: #007aff transparent transparent transparent;
-    }
-
-    button {
-      background-color: #007aff;
-      color: white;
-      border: none;
-      border-radius: 20px;
-      padding: 10px 20px;
-      font-size: 1rem;
-      cursor: pointer;
-    }
-
-    button:hover {
-      background-color: #005bb5;
-    }
-
-    .loading-bar {
-      width: 100%;
-      height: 4px;
-      background: linear-gradient(90deg, #007aff, #005bb5);
-      animation: loading 2s infinite;
-    }
-
-    @keyframes loading {
-      0% {
-        background-position: 0% 50%;
-      }
-      100% {
-        background-position: 100% 50%;
-      }
-    }
+    body { font-family: Arial, sans-serif; }
+    #chat-box { width: 400px; height: 300px; overflow-y: auto; margin-bottom: 20px; border: 1px solid #ccc; padding: 10px; }
+    #user-input { width: 300px; }
+    #send-btn { margin-left: 10px; }
   </style>
 </head>
 <body>
-  <div class="container">
-    <div class="chatbox">
-      <div class="chat-content" id="chatContent"></div>
-      <div class="chat-input">
-        <input type="text" id="userInput" class="form-control" placeholder="Digite sua resposta..." />
-        <button class="btn btn-primary" onclick="sendMessage()">Enviar</button>
-      </div>
-    </div>
-  </div>
 
-  <script>
-    let userResponses = {};
-    let userName = ''; // Variável para armazenar o nome do usuário
+<div id="chat-box"></div>
 
-    function addMessage(content, sender) {
-      const chatContent = document.getElementById('chatContent');
-      const messageDiv = document.createElement('div');
-      messageDiv.classList.add('message');
-      messageDiv.classList.add(sender === 'bot' ? 'bot-message' : 'user-message');
+<input type="text" id="user-input" placeholder="Digite sua resposta...">
+<button id="send-btn">Enviar</button>
 
-      const icon = document.createElement('i');
-      icon.classList.add(sender === 'bot' ? 'fas' : 'fas', sender === 'bot' ? 'fa-robot' : 'fa-user');
-      messageDiv.appendChild(icon);
+<form id="metar-form" method="POST" action="{% url 'app_ia:recommend' %}" style="display:none;">
+  {% csrf_token %}
+  <input type="text" id="age" name="age" value="">
+  <input type="text" id="mainUse" name="mainUse" value="">
+  <input type="text" id="linuxFamiliarity" name="linuxFamiliarity" value="">
+  <input type="text" id="budget" name="budget" value="">
+  <input type="text" id="portabilityVsPerformance" name="portabilityVsPerformance" value="">
+  <input type="text" id="batteryLife" name="batteryLife" value="">
+  <input type="text" id="brandPreference" name="brandPreference" value="">
+  <input type="text" id="screenSize" name="screenSize" value="">
+  <input type="text" id="graphicsCard" name="graphicsCard" value="">
+  <input type="text" id="memoryNeed" name="memoryNeed" value="">
+  <input type="submit" id="metar-button">
+</form>
 
-      messageDiv.innerHTML += content;
-      chatContent.appendChild(messageDiv);
-      chatContent.scrollTop = chatContent.scrollHeight;
+<script>
+  const questions = [
+    "Olá, me chamo DONNIE... Como posso lhe chamar?",
+    "Quantos anos você tem?",
+    "Qual será o principal uso do seu notebook?",
+    "Você tem familiaridade com o sistema operacional Linux?",
+    "Qual é o seu orçamento?",
+    "Prefere modelo portátil ou potente?",
+    "Autonomia da bateria é importante?",
+    "Prefere alguma marca?",
+    "Qual tamanho de tela?",
+    "Precisa de placa gráfica dedicada?",
+    "Atividades exigem muita memória?",
+    "Analisando respostas..."
+  ];
+
+  let userResponses = {};
+  let currentQuestion = 0;
+
+  function showQuestion() {
+    const chatBox = document.getElementById('chat-box');
+    
+    if (currentQuestion < questions.length) {
+      chatBox.innerHTML += `<p><strong>DONNIE:</strong> ${questions[currentQuestion]}</p>`;
+    } else {
+      chatBox.innerHTML += `<p><strong>DONNIE:</strong> Analisando respostas...</p>`;
+      // Dispara o envio do formulário ao finalizar as perguntas
+      submitForm();
     }
+    // Scroll para a última mensagem
+    chatBox.scrollTop = chatBox.scrollHeight;
+  }
 
-    function sendMessage() {
-      const userInput = document.getElementById('userInput').value;
-      if (userInput.trim() === "") return;
-      addMessage(userInput, 'user');
-      storeResponse(userInput);
-      document.getElementById('userInput').value = '';
-      setTimeout(() => askNextQuestion(), 1000);
+  function showUserResponse(response) {
+    const chatBox = document.getElementById('chat-box');
+    chatBox.innerHTML += `<p><strong>Você:</strong> ${response}</p>`;
+    // Scroll para a última mensagem
+    chatBox.scrollTop = chatBox.scrollHeight;
+  }
+
+  function saveResponsesToLocalStorage() {
+    localStorage.setItem('userResponses', JSON.stringify(userResponses));
+  }
+
+  function submitForm() {
+    // Preenche os campos do formulário com as respostas
+    document.getElementById('age').value = userResponses['question_2'];
+    document.getElementById('mainUse').value = userResponses['question_3'];
+    document.getElementById('linuxFamiliarity').value = userResponses['question_4'];
+    document.getElementById('budget').value = userResponses['question_5'];
+    document.getElementById('portabilityVsPerformance').value = userResponses['question_6'];
+    document.getElementById('batteryLife').value = userResponses['question_7'];
+    document.getElementById('brandPreference').value = userResponses['question_8'];
+    document.getElementById('screenSize').value = userResponses['question_9'];
+    document.getElementById('graphicsCard').value = userResponses['question_10'];
+    document.getElementById('memoryNeed').value = userResponses['question_11'];
+
+    // Dispara o envio do formulário
+    document.getElementById('metar-form').submit();
+  }
+
+  document.getElementById('send-btn').addEventListener('click', () => {
+    const userInput = document.getElementById('user-input').value;
+    if (userInput) {
+      // Armazenar a resposta do usuário
+      userResponses[`question_${currentQuestion + 1}`] = userInput;
+      // Salvar as respostas no localStorage
+      saveResponsesToLocalStorage();
+      
+      // Exibir a resposta no chat
+      showUserResponse(userInput);
+      
+      // Avançar para a próxima pergunta
+      currentQuestion++;
+      document.getElementById('user-input').value = '';
+      showQuestion();
     }
+  });
 
-    document.getElementById('userInput').addEventListener('keydown', function(event) {
-      if (event.key === 'Enter') {
-        event.preventDefault();
-        sendMessage();
-      }
-    });
+  // Inicia o chat
+  showQuestion();
+</script>
 
-    function storeResponse(response) {
-      const numQuestions = Object.keys(userResponses).length;
-      const keys = ['name', 'age', 'mainUse', 'linuxFamiliarity', 'budget', 'portabilityVsPerformance', 'batteryLife', 'brandPreference', 'screenSize', 'graphicsCard', 'memoryNeed'];
-      if (keys[numQuestions]) {
-        userResponses[keys[numQuestions]] = response;
-        if (keys[numQuestions] === 'name') userName = response;
-      }
-    }
-
-    function askNextQuestion() {
-      const questions = [
-        `Olá, me chamo DONNIE... Como posso lhe chamar?`,
-        `Quantos anos você tem?`,
-        `Qual será o principal uso do seu notebook?`,
-        `Você tem familiaridade com o sistema operacional Linux?`,
-        `Qual é o seu orçamento?`,
-        `Prefere modelo portátil ou potente?`,
-        `Autonomia da bateria é importante?`,
-        `Prefere alguma marca?`,
-        `Qual tamanho de tela?`,
-        `Precisa de placa gráfica dedicada?`,
-        `Atividades exigem muita memória?`,
-        `Analisando respostas...`
-      ];
-
-      const numQuestions = Object.keys(userResponses).length;
-      if (numQuestions < questions.length) {
-        addMessage(questions[numQuestions], 'bot');
-      } else {
-        console.log("Respostas coletadas:", userResponses);
-        showLoadingBar();
-
-        fetch('/recommend/', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(userResponses),
-        })
-          .then(response => response.json())
-          .then(data => {
-            hideLoadingBar();
-            if (data.recommendation) {
-              addMessage(`Recomendamos os seguintes notebooks: ${data.recommendation}`, 'bot');
-            } else {
-              addMessage('Não encontramos notebooks compatíveis.', 'bot');
-            }
-          })
-          .catch(error => {
-            hideLoadingBar();
-            addMessage('Erro ao processar solicitação.', 'bot');
-            console.error("Erro:", error);
-          });
-      }
-    }
-
-    function showLoadingBar() {
-      const chatContent = document.getElementById('chatContent');
-      const loadingDiv = document.createElement('div');
-      loadingDiv.classList.add('loading-bar');
-      chatContent.appendChild(loadingDiv);
-    }
-
-    function hideLoadingBar() {
-      const loadingDiv = document.querySelector('.loading-bar');
-      if (loadingDiv) loadingDiv.remove();
-    }
-
-    askNextQuestion();
-  </script>
 </body>
 </html>

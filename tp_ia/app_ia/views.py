@@ -12,32 +12,47 @@ label_encoder_product = joblib.load('label_encoder_product.pkl')
 @csrf_exempt  # Para permitir requisições POST sem token CSRF (apenas para testes)
 def recommend(request):
     if request.method == 'POST':
-        # Carregar os dados enviados pelo frontend
-        data = json.loads(request.body)
+        # Carregar os dados enviados pelo frontend usando request.POST
+        age = request.POST.get('age')
+        main_use = request.POST.get('mainUse')
+        linux_familiarity = request.POST.get('linuxFamiliarity')
+        budget = request.POST.get('budget')
+        portability_vs_performance = request.POST.get('portabilityVsPerformance')
+        battery_life = request.POST.get('batteryLife')
+        brand_preference = request.POST.get('brandPreference')
+        screen_size = request.POST.get('screenSize')
+        graphics_card = request.POST.get('graphicsCard')
+        memory_need = request.POST.get('memoryNeed')
 
-        # Extrair as respostas do usuário e preparar os dados para o modelo
+        # Preparar os dados para o modelo
         features = [
-            data.get('age'),
-            data.get('mainUse'),
-            data.get('linuxFamiliarity'),
-            data.get('budget'),
-            data.get('portabilityVsPerformance'),
-            data.get('batteryLife'),
-            data.get('brandPreference'),
-            data.get('screenSize'),
-            data.get('graphicsCard'),
-            data.get('memoryNeed')
+            age,
+            main_use,
+            linux_familiarity,
+            budget,
+            portability_vs_performance,
+            battery_life,
+            brand_preference,
+            screen_size,
+            graphics_card,
+            memory_need
         ]
-        
+
         # Pré-processar os dados, se necessário (exemplo: codificação de categorias)
         features = preprocess_features(features)
 
         # Usar o modelo para fazer a recomendação
         recommendation = model.predict([features])
         recommendation_label = label_encoder_product.inverse_transform(recommendation)
+        
+        context = {
+            'recommendation': recommendation_label[0],
+            'features': features,
+        }
 
         # Retornar a recomendação ao frontend
-        return JsonResponse({'recommendation': recommendation_label[0]})
+        return render(request,'resposta.html',context)
+
 
 def preprocess_features(features):
     # Exemplo de pré-processamento (ajuste conforme necessário)
