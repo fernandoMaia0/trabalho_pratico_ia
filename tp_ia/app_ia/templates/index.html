@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Recomendação de Notebook</title>
-  <!-- Integrando o Bootstrap -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
     body {
@@ -15,118 +14,129 @@
       align-items: center;
       height: 100vh;
     }
-
     .container {
       background-color: #ffffff;
-      padding: 30px;
+      padding: 20px;
       border-radius: 10px;
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
       width: 100%;
       max-width: 600px;
+      height: 80vh;
+      overflow-y: auto;
     }
-
-    h1 {
-      text-align: center;
-      color: #4e73df;
+    .chat-box {
       margin-bottom: 20px;
     }
-
-    label {
-      font-weight: bold;
-      color: #495057;
+    .user-input {
+      display: flex;
+      gap: 10px;
     }
-
-    input[type="number"] {
+    .message {
+      padding: 10px;
+      border-radius: 8px;
+      margin: 5px 0;
+    }
+    .bot {
+      background-color: #4e73df;
+      color: white;
+      align-self: flex-start;
+    }
+    .user {
+      background-color: #d1e7dd;
+      color: #0f5132;
+      align-self: flex-end;
+    }
+    input {
+      flex: 1;
+      padding: 10px;
       border-radius: 5px;
       border: 1px solid #ccc;
-      padding: 10px;
-      width: 100%;
-      margin-bottom: 15px;
     }
-
-    input[type="number"]:focus {
-      border-color: #4e73df;
-      box-shadow: 0 0 5px rgba(78, 115, 223, 0.5);
-    }
-
     button {
       background-color: #4e73df;
       color: white;
       border: none;
-      padding: 10px 20px;
+      padding: 10px;
       border-radius: 5px;
-      width: 100%;
-      font-size: 16px;
       cursor: pointer;
       transition: background-color 0.3s;
     }
-
     button:hover {
       background-color: #2e59d9;
-    }
-
-    .form-group {
-      margin-bottom: 20px;
-    }
-
-    .form-group:last-child {
-      margin-bottom: 0;
-    }
-
-    .footer {
-      text-align: center;
-      margin-top: 30px;
-      font-size: 14px;
-      color: #6c757d;
     }
   </style>
 </head>
 <body>
 
 <div class="container">
-  <h1>Recomendação de Notebook</h1>
-  <form method="POST" action="{% url 'app_ia:recommend' %}">
+  <div class="chat-box" id="chat-box"></div>
+  <form method="POST" action="{% url 'app_ia:recommend' %}" id="chat-form">
     {% csrf_token %}
-    
-    <div class="form-group">
-      <label for="price_euros">Preço (euros):</label>
-      <input type="number" id="price_euros" name="price_euros" required>
+    <input type="hidden" name="price_euros" id="price_euros">
+    <input type="hidden" name="ram" id="ram">
+    <input type="hidden" name="inches" id="inches">
+    <input type="hidden" name="weight" id="weight">
+    <input type="hidden" name="screen_width" id="screen_width">
+    <input type="hidden" name="screen_height" id="screen_height">
+    <div class="user-input">
+      <input type="text" id="user-input" placeholder="Digite sua resposta..." required>
+      <button type="button" id="send-btn">Enviar</button>
     </div>
-
-    <div class="form-group">
-      <label for="ram">RAM (GB):</label>
-      <input type="number" id="ram" name="ram" required>
-    </div>
-
-    <div class="form-group">
-      <label for="inches">Tamanho da Tela (polegadas):</label>
-      <input type="number" id="inches" name="inches" step="0.1" required>
-    </div>
-
-    <div class="form-group">
-      <label for="weight">Peso (kg):</label>
-      <input type="number" id="weight" name="weight" step="0.1" required>
-    </div>
-
-    <div class="form-group">
-      <label for="screen_width">Largura da Tela (pixels):</label>
-      <input type="number" id="screen_width" name="screen_width" required>
-    </div>
-
-    <div class="form-group">
-      <label for="screen_height">Altura da Tela (pixels):</label>
-      <input type="number" id="screen_height" name="screen_height" required>
-    </div>
-
-    <button type="submit">Enviar</button>
   </form>
-
-  <div class="footer">
-    <p>Faça sua recomendação de notebook com base nas suas preferências!</p>
-  </div>
 </div>
 
-<!-- Integrando o Bootstrap JS -->
+<script>
+  const questions = [
+    "Qual é o preço máximo que você deseja pagar (em euros)?",
+    "Quantos GB de RAM você precisa?",
+    "Qual o tamanho da tela que você prefere (em polegadas)?",
+    "Qual o peso máximo do notebook (em kg)?",
+    "Qual a largura da tela (em pixels)?",
+    "Qual a altura da tela (em pixels)?"
+  ];
+
+  let currentQuestion = 0;
+  const chatBox = document.getElementById("chat-box");
+  const userInput = document.getElementById("user-input");
+  const sendBtn = document.getElementById("send-btn");
+
+  function addMessage(text, type) {
+    const message = document.createElement("div");
+    message.className = `message ${type}`;
+    message.textContent = text;
+    chatBox.appendChild(message);
+    chatBox.scrollTop = chatBox.scrollHeight;
+  }
+
+  function askNextQuestion() {
+    if (currentQuestion < questions.length) {
+      addMessage(questions[currentQuestion], "bot");
+    } else {
+      document.getElementById("chat-form").submit();
+    }
+  }
+
+  sendBtn.addEventListener("click", () => {
+    const answer = userInput.value.trim();
+    if (!answer) return;
+
+    addMessage(answer, "user");
+    userInput.value = "";
+
+    // Save response in hidden inputs
+    const fieldIds = ["price_euros", "ram", "inches", "weight", "screen_width", "screen_height"];
+    if (currentQuestion < fieldIds.length) {
+      document.getElementById(fieldIds[currentQuestion]).value = answer;
+    }
+
+    currentQuestion++;
+    askNextQuestion();
+  });
+
+  // Start chat
+  askNextQuestion();
+</script>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
