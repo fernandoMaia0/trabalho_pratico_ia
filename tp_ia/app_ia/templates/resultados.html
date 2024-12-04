@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Resultados do Chat</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    .result { margin-bottom: 15px; }
+    .question { font-weight: bold; }
+  </style>
+</head>
+<body>
+
+  <h1>Resultados da Recomendação</h1>
+
+  <div id="results">
+      <div class="result">
+        <p class="question">Dados fornecidos pelo usuário:</p>
+        <ul>
+          {% for key, value in features.items %}
+            <li><strong>{{ key }}:</strong> {{ value }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+
+      <div class="result">
+        <p class="question">Notebook Recomendado:</p>
+        {% if recommendation %}
+          {% if recommendation.id %}
+            <ul>
+              {% for key, value in recommendation.items %}
+                <li><strong>{{ key }}:</strong> {{ value }}</li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <p>{{ recommendation }}</p>
+          {% endif %}
+        {% else %}
+          <p>Não foi possível fazer a recomendação.</p>
+        {% endif %}
+      </div>
+  </div>
+
+  <a href="/">Voltar ao chat</a>
+
+</body>
+</html>

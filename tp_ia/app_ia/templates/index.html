@@ -18,19 +18,27 @@
 <input type="text" id="user-input" placeholder="Digite sua resposta...">
 <button id="send-btn">Enviar</button>
 
-<form id="metar-form" method="POST" action="{% url 'app_ia:recommend' %}" style="display:none;">
+<form method="POST" action="{% url 'app_ia:recommend' %}">
   {% csrf_token %}
-  <input type="text" id="age" name="age" value="">
-  <input type="text" id="mainUse" name="mainUse" value="">
-  <input type="text" id="linuxFamiliarity" name="linuxFamiliarity" value="">
-  <input type="text" id="budget" name="budget" value="">
-  <input type="text" id="portabilityVsPerformance" name="portabilityVsPerformance" value="">
-  <input type="text" id="batteryLife" name="batteryLife" value="">
-  <input type="text" id="brandPreference" name="brandPreference" value="">
-  <input type="text" id="screenSize" name="screenSize" value="">
-  <input type="text" id="graphicsCard" name="graphicsCard" value="">
-  <input type="text" id="memoryNeed" name="memoryNeed" value="">
-  <input type="submit" id="metar-button">
+  <label for="price_euros">Preço (euros):</label>
+  <input type="number" id="price_euros" name="price_euros" required>
+
+  <label for="ram">RAM (GB):</label>
+  <input type="number" id="ram" name="ram" required>
+
+  <label for="inches">Tamanho da Tela (polegadas):</label>
+  <input type="number" id="inches" name="inches" step="0.1" required>
+
+  <label for="weight">Peso (kg):</label>
+  <input type="number" id="weight" name="weight" step="0.1" required>
+
+  <label for="screen_width">Largura da Tela (pixels):</label>
+  <input type="number" id="screen_width" name="screen_width" required>
+
+  <label for="screen_height">Altura da Tela (pixels):</label>
+  <input type="number" id="screen_height" name="screen_height" required>
+
+  <button type="submit">Enviar</button>
 </form>
 
 <script>

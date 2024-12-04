@@ -1,61 +1,59 @@
+import sqlite3
 import pandas as pd
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import LabelEncoder
-import joblib
+from sklearn import preprocessing
+import joblib  # Para salvar o modelo treinado
 import os
-import django
-from app_ia.models import Laptop
 
-# Definir corretamente o módulo de configurações
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "tp_ia.settings")
+# Caminho do banco de dados SQLite
+DB_PATH = r"C:\Users\Osiel Junior\trabalho_pratico_ia\tp_ia\db.sqlite3"
+TABLE_NAME = "app_ia_laptop"  # Nome da tabela no banco de dados
 
-# Inicializar o Django
-django.setup()
+if os.path.exists(DB_PATH):
+    print("Banco de dados encontrado!")
+else:
+    print("Banco de dados NÃO encontrado!")
 
-# 3. Extrair os dados relevantes para treinamento usando Django ORM
-laptops = Laptop.objects.filter(
-    price_euros__isnull=False,
-    ram__isnull=False,
-    inches__isnull=False,
-    cpu_freq__isnull=False,
-    primary_storage__isnull=False,
-    gpu_company__isnull=False,
-    product__isnull=False
-).values(
-    'price_euros', 'ram', 'inches', 'cpu_freq', 'primary_storage', 'gpu_company', 'product'
-)
+# **1. Carregar Dados do Banco**
+conn = sqlite3.connect(DB_PATH)
+laptops = pd.read_sql_query(f"SELECT * FROM {TABLE_NAME}", conn)
+conn.close()
 
-# Converter os dados para um DataFrame do Pandas
-dataset = pd.DataFrame(laptops)
+# Preencher valores nulos
+laptops.fillna({
+    'price_euros': 0,
+    'ram': 0,
+    'inches': 0,
+    'weight': 0,
+    'screen_width': 0,
+    'screen_height': 0,
+    'company': 'Unknown',
+    'os': 'Unknown',
+    'gpu_company': 'Unknown'
+}, inplace=True)
 
-# 4. Preparar os dados
-dataset = dataset.dropna()
+# **2. Pré-processamento dos Dados**
+label_encoders = {}
+categorical_columns = ['company', 'os', 'gpu_company']
 
-# Usar LabelEncoder para transformar as variáveis categóricas em numéricas
-label_encoder_gpu = LabelEncoder()
-label_encoder_product = LabelEncoder()
+for col in categorical_columns:
+    le = preprocessing.LabelEncoder()
+    laptops[col] = le.fit_transform(laptops[col])
+    label_encoders[col] = le
 
-dataset["gpu_company_encoded"] = label_encoder_gpu.fit_transform(dataset["gpu_company"])
-dataset["product_encoded"] = label_encoder_product.fit_transform(dataset["product"])
+# Definir features e target
+features = ['price_euros', 'ram', 'inches', 'weight', 'screen_width', 'screen_height']
+target = 'id'
 
-# Definir as features e o target
-X = dataset[["price_euros", "ram", "inches", "cpu_freq", "primary_storage", "gpu_company_encoded"]]
-y = dataset["product_encoded"]
+X = laptops[features]
+y = laptops[target]
 
-# Dividir os dados em conjuntos de treino e teste
+# **3. Divisão dos Dados e Treinamento**
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+clf = DecisionTreeClassifier(random_state=42)
+clf.fit(X_train, y_train)
 
-# 5. Treinar a árvore de decisão
-tree_model = DecisionTreeClassifier(random_state=42)
-tree_model.fit(X_train, y_train)
-
-# Avaliar a acurácia
-accuracy = tree_model.score(X_test, y_test)
-print(f"Acurácia do modelo: {accuracy * 100:.2f}%")
-
-# 6. Salvar o modelo e os codificadores para reutilização
-joblib.dump(tree_model, r"C:\Users\danie\trabalho_pratico_ia\tp_ia\decision_tree_model.pkl")
-joblib.dump(label_encoder_gpu, r"C:\Users\danie\trabalho_pratico_ia\tp_ia\label_encoder_gpu.pkl")
-joblib.dump(label_encoder_product, r"C:\Users\danie\trabalho_pratico_ia\tp_ia\label_encoder_product.pkl")
+# **4. Salvar o Modelo Treinado**
+joblib.dump(clf, "trained_model.pkl")  # Salva o modelo
+print("Modelo treinado e salvo como 'trained_model.pkl'")

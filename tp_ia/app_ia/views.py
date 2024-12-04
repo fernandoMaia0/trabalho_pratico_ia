@@ -1,65 +1,67 @@
-from django.http import JsonResponse
 from django.shortcuts import render
-from django.views.decorators.csrf import csrf_exempt
-import json
+from django.http import JsonResponse
+import pandas as pd
 import joblib
+import sqlite3
 
-# Carregar os modelos
-model = joblib.load('decision_tree_model.pkl')
-label_encoder_gpu = joblib.load('label_encoder_gpu.pkl')
-label_encoder_product = joblib.load('label_encoder_product.pkl')
+# Caminho para o modelo treinado
+MODEL_PATH = r"C:\Users\Osiel Junior\trabalho_pratico_ia\tp_ia\app_ia\trained_model.pkl"
+# Caminho do banco de dados SQLite
+DB_PATH = r"C:\Users\Osiel Junior\trabalho_pratico_ia\tp_ia\db.sqlite3"
+TABLE_NAME = "app_ia_laptop"  # Ajuste conforme o nome da tabela no SQLite
 
-@csrf_exempt  # Para permitir requisições POST sem token CSRF (apenas para testes)
+# Carregar o modelo treinado
+clf = joblib.load(MODEL_PATH)
+
 def recommend(request):
-    if request.method == 'POST':
-        # Carregar os dados enviados pelo frontend usando request.POST
-        age = request.POST.get('age')
-        main_use = request.POST.get('mainUse')
-        linux_familiarity = request.POST.get('linuxFamiliarity')
-        budget = request.POST.get('budget')
-        portability_vs_performance = request.POST.get('portabilityVsPerformance')
-        battery_life = request.POST.get('batteryLife')
-        brand_preference = request.POST.get('brandPreference')
-        screen_size = request.POST.get('screenSize')
-        graphics_card = request.POST.get('graphicsCard')
-        memory_need = request.POST.get('memoryNeed')
+    if request.method == "POST":
+        try:
+            # **1. Obter Dados do Usuário**
+            user_input = {
+                "price_euros": float(request.POST.get("price_euros")),
+                "ram": int(request.POST.get("ram",)),
+                "inches": float(request.POST.get("inches")),
+                "weight": float(request.POST.get("weight",)),
+                "screen_width": int(request.POST.get("screen_width")),
+                "screen_height": int(request.POST.get("screen_height",))
+            }
 
-        # Preparar os dados para o modelo
-        features = [
-            age,
-            main_use,
-            linux_familiarity,
-            budget,
-            portability_vs_performance,
-            battery_life,
-            brand_preference,
-            screen_size,
-            graphics_card,
-            memory_need
-        ]
+            # **2. Converter os Dados do Usuário em DataFrame**
+            user_input_df = pd.DataFrame([user_input])
 
-        # Pré-processar os dados, se necessário (exemplo: codificação de categorias)
-        features = preprocess_features(features)
+            # **3. Fazer a Predição**
+            recommended_laptop_id = clf.predict(user_input_df)[0]
+            print(f"ID previsto pelo modelo: {recommended_laptop_id}")
 
-        # Usar o modelo para fazer a recomendação
-        recommendation = model.predict([features])
-        recommendation_label = label_encoder_product.inverse_transform(recommendation)
-        
-        context = {
-            'recommendation': recommendation_label[0],
-            'features': features,
-        }
+            # **4. Buscar Informações Detalhadas do Banco**
+            conn = sqlite3.connect(DB_PATH)
+            query = f"SELECT * FROM {TABLE_NAME} WHERE id = ?"
+            recommended_laptop = pd.read_sql_query(query, conn, params=(int(recommended_laptop_id),))
+            conn.close()
 
-        # Retornar a recomendação ao frontend
-        return render(request,'resposta.html',context)
+            if not recommended_laptop.empty:
+                response = recommended_laptop.iloc[0].to_dict()
+                return render(request, 'resultados.html', {
+                    'features': user_input,
+                    'recommendation': response
+                })
+            else:
+                return render(request, 'resultados.html', {
+                    'features': user_input,
+                    'recommendation': "Nenhum notebook encontrado."
+                })
 
+        except Exception as e:
+            return render(request, 'resultados.html', {
+                'features': {},
+                'recommendation': f"Erro ao fazer a recomendação: {str(e)}"
+            })
 
-def preprocess_features(features):
-    # Exemplo de pré-processamento (ajuste conforme necessário)
-    # Se houver valores categóricos, você pode precisar usar o label_encoder para transformá-los
-    features[4] = label_encoder_gpu.transform([features[4]])  # Exemplo de codificação para 'portabilityVsPerformance'
-    # Adicione mais transformações conforme necessário para outras variáveis categóricas
-    return features
+    return render(request, 'resultados.html', {
+        'features': {},
+        'recommendation': "Método não permitido."
+    })
+
 
 def index(request):
     return render(request, 'index.html')
