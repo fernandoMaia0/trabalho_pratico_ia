@@ -116,7 +116,7 @@
     }
   }
 
-  sendBtn.addEventListener("click", () => {
+  function sendAnswer() {
     const answer = userInput.value.trim();
     if (!answer) return;
 
@@ -131,6 +131,16 @@
 
     currentQuestion++;
     askNextQuestion();
+  }
+
+  sendBtn.addEventListener("click", sendAnswer);
+
+  // Allow sending answer with Enter key
+  userInput.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      sendAnswer();
+    }
   });
 
   // Start chat
