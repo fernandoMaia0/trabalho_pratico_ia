@@ -7,7 +7,7 @@ import joblib  # Para salvar o modelo treinado
 import os
 
 # Caminho do banco de dados SQLite
-DB_PATH = r"C:\Users\Osiel Junior\trabalho_pratico_ia\tp_ia\db.sqlite3"
+DB_PATH = r"C:\Users\danie\OneDrive\Área de Trabalho\trabalho_pratico_ia\tp_ia\tp_ia\tp_ia\db.sqlite3"
 TABLE_NAME = "app_ia_laptop"  # Nome da tabela no banco de dados
 
 if os.path.exists(DB_PATH):

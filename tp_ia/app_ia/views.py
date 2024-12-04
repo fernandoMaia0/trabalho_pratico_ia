@@ -5,9 +5,9 @@ import joblib
 import sqlite3
 
 # Caminho para o modelo treinado
-MODEL_PATH = r"C:\Users\Osiel Junior\trabalho_pratico_ia\tp_ia\app_ia\trained_model.pkl"
+MODEL_PATH = r"C:\Users\danie\OneDrive\Área de Trabalho\trabalho_pratico_ia\tp_ia\app_ia\trained_model.pkl"
 # Caminho do banco de dados SQLite
-DB_PATH = r"C:\Users\Osiel Junior\trabalho_pratico_ia\tp_ia\db.sqlite3"
+DB_PATH = r"C:\Users\danie\OneDrive\Área de Trabalho\trabalho_pratico_ia\tp_ia\tp_ia\tp_ia\db.sqlite3"
 TABLE_NAME = "app_ia_laptop"  # Ajuste conforme o nome da tabela no SQLite
 
 # Carregar o modelo treinado

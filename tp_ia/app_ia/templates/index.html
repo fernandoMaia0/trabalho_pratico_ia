@@ -3,126 +3,130 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Chat IA</title>
+  <title>Recomendação de Notebook</title>
+  <!-- Integrando o Bootstrap -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
-    body { font-family: Arial, sans-serif; }
-    #chat-box { width: 400px; height: 300px; overflow-y: auto; margin-bottom: 20px; border: 1px solid #ccc; padding: 10px; }
-    #user-input { width: 300px; }
-    #send-btn { margin-left: 10px; }
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f8f9fa;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .container {
+      background-color: #ffffff;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 600px;
+    }
+
+    h1 {
+      text-align: center;
+      color: #4e73df;
+      margin-bottom: 20px;
+    }
+
+    label {
+      font-weight: bold;
+      color: #495057;
+    }
+
+    input[type="number"] {
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      padding: 10px;
+      width: 100%;
+      margin-bottom: 15px;
+    }
+
+    input[type="number"]:focus {
+      border-color: #4e73df;
+      box-shadow: 0 0 5px rgba(78, 115, 223, 0.5);
+    }
+
+    button {
+      background-color: #4e73df;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      width: 100%;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    button:hover {
+      background-color: #2e59d9;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group:last-child {
+      margin-bottom: 0;
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 30px;
+      font-size: 14px;
+      color: #6c757d;
+    }
   </style>
 </head>
 <body>
 
-<div id="chat-box"></div>
-
-<input type="text" id="user-input" placeholder="Digite sua resposta...">
-<button id="send-btn">Enviar</button>
-
-<form method="POST" action="{% url 'app_ia:recommend' %}">
-  {% csrf_token %}
-  <label for="price_euros">Preço (euros):</label>
-  <input type="number" id="price_euros" name="price_euros" required>
-
-  <label for="ram">RAM (GB):</label>
-  <input type="number" id="ram" name="ram" required>
-
-  <label for="inches">Tamanho da Tela (polegadas):</label>
-  <input type="number" id="inches" name="inches" step="0.1" required>
-
-  <label for="weight">Peso (kg):</label>
-  <input type="number" id="weight" name="weight" step="0.1" required>
-
-  <label for="screen_width">Largura da Tela (pixels):</label>
-  <input type="number" id="screen_width" name="screen_width" required>
-
-  <label for="screen_height">Altura da Tela (pixels):</label>
-  <input type="number" id="screen_height" name="screen_height" required>
-
-  <button type="submit">Enviar</button>
-</form>
-
-<script>
-  const questions = [
-    "Olá, me chamo DONNIE... Como posso lhe chamar?",
-    "Quantos anos você tem?",
-    "Qual será o principal uso do seu notebook?",
-    "Você tem familiaridade com o sistema operacional Linux?",
-    "Qual é o seu orçamento?",
-    "Prefere modelo portátil ou potente?",
-    "Autonomia da bateria é importante?",
-    "Prefere alguma marca?",
-    "Qual tamanho de tela?",
-    "Precisa de placa gráfica dedicada?",
-    "Atividades exigem muita memória?",
-    "Analisando respostas..."
-  ];
-
-  let userResponses = {};
-  let currentQuestion = 0;
-
-  function showQuestion() {
-    const chatBox = document.getElementById('chat-box');
+<div class="container">
+  <h1>Recomendação de Notebook</h1>
+  <form method="POST" action="{% url 'app_ia:recommend' %}">
+    {% csrf_token %}
     
-    if (currentQuestion < questions.length) {
-      chatBox.innerHTML += `<p><strong>DONNIE:</strong> ${questions[currentQuestion]}</p>`;
-    } else {
-      chatBox.innerHTML += `<p><strong>DONNIE:</strong> Analisando respostas...</p>`;
-      // Dispara o envio do formulário ao finalizar as perguntas
-      submitForm();
-    }
-    // Scroll para a última mensagem
-    chatBox.scrollTop = chatBox.scrollHeight;
-  }
+    <div class="form-group">
+      <label for="price_euros">Preço (euros):</label>
+      <input type="number" id="price_euros" name="price_euros" required>
+    </div>
 
-  function showUserResponse(response) {
-    const chatBox = document.getElementById('chat-box');
-    chatBox.innerHTML += `<p><strong>Você:</strong> ${response}</p>`;
-    // Scroll para a última mensagem
-    chatBox.scrollTop = chatBox.scrollHeight;
-  }
+    <div class="form-group">
+      <label for="ram">RAM (GB):</label>
+      <input type="number" id="ram" name="ram" required>
+    </div>
 
-  function saveResponsesToLocalStorage() {
-    localStorage.setItem('userResponses', JSON.stringify(userResponses));
-  }
+    <div class="form-group">
+      <label for="inches">Tamanho da Tela (polegadas):</label>
+      <input type="number" id="inches" name="inches" step="0.1" required>
+    </div>
 
-  function submitForm() {
-    // Preenche os campos do formulário com as respostas
-    document.getElementById('age').value = userResponses['question_2'];
-    document.getElementById('mainUse').value = userResponses['question_3'];
-    document.getElementById('linuxFamiliarity').value = userResponses['question_4'];
-    document.getElementById('budget').value = userResponses['question_5'];
-    document.getElementById('portabilityVsPerformance').value = userResponses['question_6'];
-    document.getElementById('batteryLife').value = userResponses['question_7'];
-    document.getElementById('brandPreference').value = userResponses['question_8'];
-    document.getElementById('screenSize').value = userResponses['question_9'];
-    document.getElementById('graphicsCard').value = userResponses['question_10'];
-    document.getElementById('memoryNeed').value = userResponses['question_11'];
+    <div class="form-group">
+      <label for="weight">Peso (kg):</label>
+      <input type="number" id="weight" name="weight" step="0.1" required>
+    </div>
 
-    // Dispara o envio do formulário
-    document.getElementById('metar-form').submit();
-  }
+    <div class="form-group">
+      <label for="screen_width">Largura da Tela (pixels):</label>
+      <input type="number" id="screen_width" name="screen_width" required>
+    </div>
 
-  document.getElementById('send-btn').addEventListener('click', () => {
-    const userInput = document.getElementById('user-input').value;
-    if (userInput) {
-      // Armazenar a resposta do usuário
-      userResponses[`question_${currentQuestion + 1}`] = userInput;
-      // Salvar as respostas no localStorage
-      saveResponsesToLocalStorage();
-      
-      // Exibir a resposta no chat
-      showUserResponse(userInput);
-      
-      // Avançar para a próxima pergunta
-      currentQuestion++;
-      document.getElementById('user-input').value = '';
-      showQuestion();
-    }
-  });
+    <div class="form-group">
+      <label for="screen_height">Altura da Tela (pixels):</label>
+      <input type="number" id="screen_height" name="screen_height" required>
+    </div>
 
-  // Inicia o chat
-  showQuestion();
-</script>
+    <button type="submit">Enviar</button>
+  </form>
 
+  <div class="footer">
+    <p>Faça sua recomendação de notebook com base nas suas preferências!</p>
+  </div>
+</div>
+
+<!-- Integrando o Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
