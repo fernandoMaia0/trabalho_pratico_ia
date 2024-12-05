@@ -16,7 +16,7 @@ else:
     print("Banco de dados NÃO encontrado!")
 
 # **1. Carregar Dados do Banco**
-conn = sqlite3.connect(DB_PATH)
+conn = sqlite3.connect(DB_PATH) 
 laptops = pd.read_sql_query(f"SELECT * FROM {TABLE_NAME}", conn)
 conn.close()
 
@@ -37,6 +37,9 @@ laptops.fillna({
 label_encoders = {}
 categorical_columns = ['company', 'os', 'gpu_company']
 
+#processamento de categorias de colunas 
+#é da biblioteca 
+#o processamento é feito antes 
 for col in categorical_columns:
     le = preprocessing.LabelEncoder()
     laptops[col] = le.fit_transform(laptops[col])
@@ -44,10 +47,10 @@ for col in categorical_columns:
 
 # Definir features e target
 features = ['price_euros', 'ram', 'inches', 'weight', 'screen_width', 'screen_height']
-target = 'id'
+target = 'id' # o objetivo 
 
-X = laptops[features]
-y = laptops[target]
+X = laptops[features] # onde é colocado as features
+y = laptops[target] # recbe o id do produto 
 
 # **3. Divisão dos Dados e Treinamento**
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
